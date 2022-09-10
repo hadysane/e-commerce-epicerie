@@ -187,3 +187,12 @@ footer {
       top: 60px;
   }  
 }
+
+.link{
+  cursor : pointer
+
+}
+
+.link:hover{
+  font-weight:700; 
+}

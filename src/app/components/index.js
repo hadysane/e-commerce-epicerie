@@ -1,6 +1,6 @@
 import React from "react";
 
-export const Navbar = () => {
+export const Navbar = ({filter}) => {
   return (
     <nav className="navbar orange navbar-expand-lg navbar-light bg-light fixed-top">
       <a href="" className="navbar-brand crimson">
@@ -26,7 +26,9 @@ export const Navbar = () => {
                 className="form-control mr-sm-2"
                 type="search"
                 placeholder="Search"
-                aria-label="Search"/>
+                aria-label="Search"
+                onChange={(e)=> filter(e.target.value)}
+              />
             </form>
           </div>
           <div className="menu-right">
@@ -49,7 +51,7 @@ export const Footer = () => {
 };
 
 export const Card = (props) => {
-  const { fruit } = props;
+  const { item } = props;
   return (
     <div className="col-sm-4">
       <div className="card">
@@ -57,17 +59,17 @@ export const Card = (props) => {
           width="170"
           height="170"
           src={
-            process.env.PUBLIC_URL + `/assets/${fruit.category}/${fruit.image}`
+            process.env.PUBLIC_URL + `/assets/${item.category}/${item.image}`
           }
-          alt="citron"
+          alt={item.name}
         />
         <div className="card-body">
           <div className="row">
             <div className="col-sm-6">
-              <h4>{fruit.name}</h4>
+              <h4>{item.name}</h4>
             </div>
             <div className="col-sm-6">
-              <p>€{fruit.price}/{fruit.unit}</p>
+              <p>€{item.price}/{item.unit}</p>
               <button className="btn btn-warning btn-sm">view product</button>
             </div>
           </div>
@@ -168,13 +170,11 @@ export const Modal = () => {
 
 
 export const List = props => {
-  const { data } = props; 
-  const fruits = data[0]
-  console.log(fruits)
+  const { data, category} = props; 
   return (
     <div className="col-sm">
       <div className="row">
-        {fruits.map((fruit) => <Card fruit={fruit} />)}
+        {data.map((item, index) => <Card key={index} item={item} />)}
       </div>
     </div>
   );
