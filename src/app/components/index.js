@@ -1,11 +1,15 @@
-import React from "react";
+import React, {useState, Fragment} from "react";
+import { Link } from "react-router-dom";
+import { useSelector, useDispatch } from 'react-redux'
+import { addToCart } from "../lib/slices/onlineStoreSlice";
 
-export const Navbar = ({filter}) => {
+export const Navbar = ({ filter, setFiltering}) => {
+  const items = useSelector((state) => state.cart.items)
   return (
     <nav className="navbar orange navbar-expand-lg navbar-light bg-light fixed-top">
-      <a href="" className="navbar-brand crimson">
+      <Link to="/" className="navbar-brand crimson">
         <i className="fas fa-shopping-cart"></i> Mes Courses en Ligne
-      </a>
+      </Link>
       <button
         className="navbar-toggler"
         type="button"
@@ -27,12 +31,20 @@ export const Navbar = ({filter}) => {
                 type="search"
                 placeholder="Search"
                 aria-label="Search"
-                onChange={(e)=> filter(e.target.value)}
+                onChange={(e) => {
+                  setFiltering(e.target.value.length > 0)
+                  filter(e.target.value)
+                }
+                }
               />
             </form>
           </div>
           <div className="menu-right">
-            {/* cart */}
+            <Link to="/cart">
+              <i className="fa-sharp fa-solid fa-bag-shopping fa-2x grey"></i>
+            </Link>
+            <span className="badge badge-pill badge-success">{items.length > 0 && items.length}</span>
+           
           </div>
         </div>
       </div>
@@ -51,7 +63,7 @@ export const Footer = () => {
 };
 
 export const Card = (props) => {
-  const { item } = props;
+  const { item, count} = props;
   return (
     <div className="col-sm-4">
       <div className="card">
@@ -70,24 +82,35 @@ export const Card = (props) => {
             </div>
             <div className="col-sm-6">
               <p>€{item.price}/{item.unit}</p>
-              <button className="btn btn-warning btn-sm">view product</button>
+              <button className="btn btn-warning btn-sm" data-toggle="modal" data-target={`#${item.ref}`}>view product</button>
             </div>
           </div>
         </div>
       </div>
-      {/* modal */}
+      <Modal item={item} countCart={count} />
     </div>
   );
 };
 
 
-export const Modal = () => {
+export const Modal = ({ item }) => {
+  // use dispatch
+  const dispatch = useDispatch()
+
+  // quantity product
+  const [qty, setQty] = useState(1)
+
+  // add Product
+  const add = (qty, details) => {
+    dispatch(addToCart({ quantity: qty, details: details }))
+  }
+
   return (
     <div
       className="modal fade "
-      id=""
+      id={item.ref}
       data-backdrop="static"
-      tabindex="-1"
+      tabIndex="-1"
       role="dialog"
       aria-labelledby="staticBackdropLabel"
       aria-hidden="true"
@@ -95,7 +118,7 @@ export const Modal = () => {
       <div className="modal-dialog modal-xl" role="document">
         <div className="modal-content">
           <div className="modal-header">
-            <h5 className="modal-title" id="staticBackdropLabel">Citrons</h5>
+            <h5 className="modal-title" id="staticBackdropLabel">{item.name}</h5>
             <button
               type="button"
               className="close"
@@ -112,10 +135,9 @@ export const Modal = () => {
                   width="170"
                   height="170"
                   src={
-                    process.env.PUBLIC_URL + 
-                    `/assets/0/citron.png`
+                    process.env.PUBLIC_URL + `/assets/${item.category}/${item.image}`
                   }
-                  alt="Citron"
+                  alt={item.name}
                 />
               </div>
 
@@ -124,19 +146,21 @@ export const Modal = () => {
                   Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
                   do eiusmod tempor incididunt ut labore et dolore
                 </p>
-                <h3 className="price">€1.99</h3> <br />
+                <h3 className="price">{item.price}€/{item.unit}</h3> <br />
                 <div
                   className="btn-group"
                   role="group"
                   aria-label="Basic example"
                 >
                   <button
+                    onClick={() => setQty(qty > 1 ? qty - 1 : 1)}
                     type="button"
                     className="btn btn-secondary">
                     -
                   </button>
-                  <span className="btn btn-light qty">1</span>
+                  <span className="btn btn-light qty">{qty}</span>
                   <button
+                    onClick={() => setQty(qty + 1)}
                     type="button"
                     className="btn btn-secondary">
                     +
@@ -158,6 +182,9 @@ export const Modal = () => {
               type="button"
               className="btn btn-success"
               data-dismiss="modal"
+              onClick={() => {
+                add(qty,item)
+              }}
             >
               Add to Cart
             </button>
@@ -170,11 +197,11 @@ export const Modal = () => {
 
 
 export const List = props => {
-  const { data, category} = props; 
+  const { data, updateCart} = props; 
   return (
     <div className="col-sm">
       <div className="row">
-        {data.map((item, index) => <Card key={index} item={item} />)}
+        {data.map((item, index) => <Card key={index} item={item}  />)}
       </div>
     </div>
   );
@@ -184,3 +211,52 @@ export const List = props => {
 // il y a deux environnements : 
 // - un qui corespond au développement et au développement qui est src
 // - un autre pour le public avec le chemin qu'on mets en place 
+
+
+export const CartPage = () => {
+  return (
+    <Fragment>
+      <div className="row">
+        <div className="col-sm-2 cart">
+        </div>
+        <div className="col-sm-3 order-summary">
+          <ul className="list-group">
+            <li className="list-group-item">Order Summary</li>
+
+            <li className="list-group-item">
+              <ul className="list-group flex">
+                <li className="text-left">Subtotal</li>
+                <li className="text-right">€0.00</li>
+              </ul>
+              <ul className="list-group flex">
+                <li className="text-left">shipping</li>
+                <li className="text-right">€0.00</li>
+              </ul>
+              <ul className="list-group flex">
+                <li className="coupon crimson">
+                  <small>  Add Coupon Code</small>
+                </li>
+              </ul>
+            </li>
+
+            <li className="list-group-item ">
+              <ul className="list-group flex">
+                <li className="text-left">Total</li>
+                <li className="text-right">€€0.00</li>
+              </ul>
+            </li>
+          </ul>
+          <button
+            type="button"
+            className="btn btn-light btn-lg btn-block checkout bg-crimson"
+            disabled="true"
+          >
+            <a href="#" className="white">
+              Checkout
+            </a>
+          </button>
+        </div>
+      </div>
+    </Fragment>
+  );
+}
